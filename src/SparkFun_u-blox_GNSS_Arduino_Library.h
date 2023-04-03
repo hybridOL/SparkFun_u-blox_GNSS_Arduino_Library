@@ -526,7 +526,9 @@ enum sfe_ublox_gnss_ids_e
   SFE_UBLOX_GNSS_ID_BEIDOU,
   SFE_UBLOX_GNSS_ID_IMES,
   SFE_UBLOX_GNSS_ID_QZSS,
-  SFE_UBLOX_GNSS_ID_GLONASS
+  SFE_UBLOX_GNSS_ID_GLONASS,
+  // not a GNSS, used to define array size for multi-enable etc.
+  SFE_UBLOX_GNSS_ID_SIZE
 };
 
 // The GNSS identifiers of leap second event info source - used by UBX-NAV-TIMELS
