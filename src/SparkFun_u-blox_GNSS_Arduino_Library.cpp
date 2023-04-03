@@ -8299,6 +8299,34 @@ bool SFE_UBLOX_GNSS::enableGNSS(bool enable, sfe_ublox_gnss_ids_e id, uint16_t m
   return (sendCommand(&packetCfg, maxWait) == SFE_UBLOX_STATUS_DATA_SENT); // We are only expecting an ACK
 }
 
+// Enable/Disable all GNSS systems at once using UBX-CFG-GNSS
+bool SFE_UBLOX_GNSS::enableGNSS(const uint8_t* gnssIDs, uint8_t numIDs, uint16_t maxWait)
+{
+  packetCfg.cls = UBX_CLASS_CFG;
+  packetCfg.id = UBX_CFG_GNSS;
+  packetCfg.len = 0;
+  packetCfg.startingSpot = 0;
+
+  if (sendCommand(&packetCfg, maxWait) != SFE_UBLOX_STATUS_DATA_RECEIVED) // We are expecting data and an ACK
+    return (false);
+
+  uint8_t numConfigBlocks = payloadCfg[3]; // Extract the numConfigBlocks
+
+  for (uint8_t block = 0; block < numConfigBlocks; block++) // Check each configuration block
+  {
+    if (payloadCfg[(block * 8) + 4] < numIDs) // Check the gnssId for this block. Do we have a match?
+    {
+      // We have a match so set/clear the enable bit in flags
+      if (gnssIDs[payloadCfg[(block * 8) + 4]]>0)
+        payloadCfg[(block * 8) + 4 + 4] |= 0x01; // Set the enable bit in flags (Little Endian)
+      else
+        payloadCfg[(block * 8) + 4 + 4] &= 0xFE; // Clear the enable bit in flags (Little Endian)
+    }
+  }
+
+  return (sendCommand(&packetCfg, maxWait) == SFE_UBLOX_STATUS_DATA_SENT); // We are only expecting an ACK
+}
+
 // Check if an individual GNSS system is enabled
 bool SFE_UBLOX_GNSS::isGNSSenabled(sfe_ublox_gnss_ids_e id, uint16_t maxWait)
 {
@@ -8325,6 +8353,32 @@ bool SFE_UBLOX_GNSS::isGNSSenabled(sfe_ublox_gnss_ids_e id, uint16_t maxWait)
   }
 
   return (retVal);
+}
+
+// Check if all specified GNSS systems are enabled
+bool SFE_UBLOX_GNSS::isGNSSenabled(uint8_t* gnssIDs, uint8_t numIDs, uint16_t maxWait)
+{
+  packetCfg.cls = UBX_CLASS_CFG;
+  packetCfg.id = UBX_CFG_GNSS;
+  packetCfg.len = 0;
+  packetCfg.startingSpot = 0;
+
+  if (sendCommand(&packetCfg, maxWait) != SFE_UBLOX_STATUS_DATA_RECEIVED) // We are expecting data and an ACK
+    return false;
+
+  uint8_t numConfigBlocks = payloadCfg[3]; // Extract the numConfigBlocks
+
+  for (uint8_t block = 0; block < numConfigBlocks; block++) // Check each configuration block
+  {
+    if (payloadCfg[(block * 8) + 4] < numIDs) // Check the gnssId for this block. Do we have a match?
+    {
+      // We have a match so check the enable bit in flags
+      if ((gnssIDs[payloadCfg[(block * 8) + 4]]>0) && ((payloadCfg[(block * 8) + 4 + 4] & 0x01) == 0)) // Check the enable bit in flags (Little Endian)
+        return false;
+    }
+  }
+
+  return true;
 }
 
 // Reset ESF automatic IMU-mount alignment

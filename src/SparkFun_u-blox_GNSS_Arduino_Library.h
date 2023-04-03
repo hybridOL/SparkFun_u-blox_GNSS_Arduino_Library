@@ -937,7 +937,9 @@ public:
   // Note: you must leave at least one major GNSS enabled! If in doubt, enable GPS before disabling the others
   // TO DO: Add support for sigCfgMask and maxTrkCh. (Need to resolve ambiguity with maxWait)
   bool enableGNSS(bool enable, sfe_ublox_gnss_ids_e id, uint16_t maxWait = defaultMaxWait);
+  bool enableGNSS(const uint8_t *gnssIDs, uint8_t numIDs, uint16_t maxWait = defaultMaxWait);
   bool isGNSSenabled(sfe_ublox_gnss_ids_e id, uint16_t maxWait = defaultMaxWait);
+  bool isGNSSenabled(uint8_t * gnssIDs, uint8_t numIDs, uint16_t maxWait = defaultMaxWait);
 
   // Reset ESF automatic IMU-mount alignment
   bool resetIMUalignment(uint16_t maxWait = defaultMaxWait);
